@@ -1,0 +1,194 @@
+--Start with basic table views
+SELECT *
+FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` 
+ORDER BY ActivityDate
+LIMIT 10
+
+SELECT *
+FROM `case-study-2-332919.Case_Study_2.dailyCalories_merged` 
+ORDER BY ActivityDay
+LIMIT 10
+
+SELECT *
+FROM `case-study-2-332919.Case_Study_2.dailyIntensites_merged` 
+ORDER BY ActivityDay
+LIMIT 10
+
+SELECT *
+FROM `case-study-2-332919.Case_Study_2.dailySteps_merged` 
+ORDER BY ActivityDay
+LIMIT 10
+
+-- Lets get a better idea of the subjects activity
+SELECT 
+SUM(TotalSteps) AS Total_Steps,
+AVG(TotalSteps) AS Average_Steps,
+SUM(TotalDistance) AS Total_Distance,
+AVG(TotalDistance) AS Average_Distance,
+SUM(TrackerDistance) AS Total_Tracker_Distance,
+AVG(TrackerDistance) AS Average_TrackerDistance
+FROM
+`case-study-2-332919.Case_Study_2.dailyActivity_merged` 
+
+ -- Double check to see which column names are shared across tables
+SELECT
+ column_name,
+ COUNT(table_name) AS table_with_column
+FROM
+`case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+GROUP BY
+ 1;
+
+
+-- Note: each table has the 'Id' colmn in common, lets, confirm and check for duplicates (We know there were 33 participants so we should 33 Id numbers)
+SELECT
+ table_name,
+ SUM(CASE
+     WHEN column_name = "Id" THEN 1
+   ELSE
+   0
+ END
+   ) AS has_id_column
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+GROUP BY
+ 1
+ORDER BY
+ 1 ASC;
+
+
+SELECT COUNT (DISTINCT Id)
+FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` 
+
+SELECT COUNT (DISTINCT Id)
+FROM `case-study-2-332919.Case_Study_2.dailyCalories_merged`
+
+SELECT COUNT (DISTINCT Id)
+FROM `case-study-2-332919.Case_Study_2.dailyIntensites_merged`
+
+SELECT COUNT (DISTINCT Id)
+FROM `case-study-2-332919.Case_Study_2.dailySteps_merged`
+
+ -- This query checks to make sure that each table has a column of a date or time related type
+ -- Assuming column types were detected properly prior to upload this table should be empty
+SELECT
+ table_name,
+ SUM(CASE
+     WHEN data_type IN ("TIMESTAMP", "DATETIME", "TIME", "DATE") THEN 1
+   ELSE
+   0
+ END
+   ) AS has_time_info
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+ data_type IN ("TIMESTAMP",
+   "DATETIME",
+   "DATE")
+GROUP BY
+ 1
+HAVING
+ has_time_info = 0;
+
+ -- Now we can check the columns with type DATETIME, TIMESTAMP, or DATE we can use this query to check for their names
+SELECT
+ CONCAT(table_catalog,".",table_schema,".",table_name) AS table_path,
+ table_name,
+ column_name
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+ data_type IN ("TIMESTAMP",
+   "DATETIME",
+   "DATE");
+
+ -- We now know that every table has an "Id" column but we don't know how to join the dates
+ -- If we find that not every table has a DATETIME, TIMESTAMP, or DATE column we use their names to check for what might be date-related
+ -- Here we check to see if the column name has any of the keywords below:
+ -- date, minute, daily, hourly, day, seconds
+SELECT
+ table_name,
+ column_name
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+ REGEXP_CONTAINS(LOWER(column_name), "date|minute|daily|hourly|day|seconds");
+
+ -- If we want to do analysis based upon daily data, this could help us to find tables that might be at the day level
+SELECT
+ DISTINCT table_name
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+ REGEXP_CONTAINS(LOWER(table_name),"day|daily");
+
+  -- Now that we have a list of tables we should look at the columns that are shared among the tables
+ -- We should also make certain that the data types align between tables
+SELECT
+ column_name,
+ table_name,
+ data_type
+FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+ REGEXP_CONTAINS(LOWER(table_name),"day|daily")
+ AND column_name IN (
+ SELECT
+   column_name
+ FROM
+ `case-study-2-332919.Case_Study_2.INFORMATION_SCHEMA.COLUMNS`
+ WHERE
+   REGEXP_CONTAINS(LOWER(table_name),"day|daily")
+ GROUP BY
+   1
+ HAVING
+   COUNT(table_name) >=2)
+ORDER BY
+ 1;
+
+--Lets join these tables and see how things match up
+SELECT
+A.Id,
+C.Id,
+S.Id,
+A.Calories,
+C.Calories,
+A.ActivityDate,
+C.ActivityDay,
+I.ActivityDay,
+S.ActivityDay
+FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` A
+JOIN `case-study-2-332919.Case_Study_2.dailyCalories_merged` C
+ON A.Id = C.Id
+    AND A.ActivityDate = C.ActivityDay
+    AND A.Calories = C.Calories  
+JOIN  `case-study-2-332919.Case_Study_2.dailyIntensites_merged` I
+ON A.Id = I.Id
+    AND A.ActivityDate = I.ActivityDay
+JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
+ON A.Id = S.Id
+    AND A.ActivityDate = S.ActivityDay
+
+-- If we wanted create sumamry stats
+SELECT 
+MAX(A.Calories) AS Max_Calories,
+MAX(S.StepTotal) AS Max_Steps,
+AVG(A.Calories) AS Avg_Calories,
+AVG(S.StepTotal) AS Avg_Steps,
+MIN(A.Calories) AS Min_Calories,
+MIN(S.StepTotal) AS Min_Steps
+FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` A
+JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
+ON A.Id = S.Id
+    AND A.ActivityDate = S.ActivityDay
+
+SELECT 
+A.Id,
+A.Calories,
+SUM(A.VeryActiveMinutes + A.LightlyActiveMinutes + A.FairlyActiveMinutes) AS Total_Active_Minutes,
+FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` A
+JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
+ON A.Id = S.Id
+    AND A.ActivityDate = S.ActivityDay
+GROUP BY A.Id, A.Calories
+ORDER BY A.Calories DESC
