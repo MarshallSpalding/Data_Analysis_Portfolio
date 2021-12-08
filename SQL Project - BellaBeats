@@ -183,6 +183,7 @@ ON A.Id = S.Id
     AND A.ActivityDate = S.ActivityDay
 
 SELECT 
+S.ActivityDay,
 A.Id,
 A.Calories,
 SUM(A.VeryActiveMinutes + A.LightlyActiveMinutes + A.FairlyActiveMinutes) AS Total_Active_Minutes,
@@ -190,5 +191,5 @@ FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` A
 JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
 ON A.Id = S.Id
     AND A.ActivityDate = S.ActivityDay
-GROUP BY A.Id, A.Calories
-ORDER BY A.Calories DESC
+GROUP BY S.ActivityDay,A.Id, A.Calories
+ORDER BY S.ActivityDay 
