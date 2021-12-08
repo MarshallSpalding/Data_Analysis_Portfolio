@@ -192,4 +192,4 @@ JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
 ON A.Id = S.Id
     AND A.ActivityDate = S.ActivityDay
 GROUP BY S.ActivityDay,A.Id, A.Calories
-ORDER BY S.ActivityDay 
+ORDER BY S.ActivityDay
