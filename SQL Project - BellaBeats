@@ -181,6 +181,7 @@ FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` A
 JOIN `case-study-2-332919.Case_Study_2.dailySteps_merged` S
 ON A.Id = S.Id
     AND A.ActivityDate = S.ActivityDay
+-- saved results as CSV "bella beats activity summary" see "bella beats activity summary viz"
 
 SELECT 
 S.ActivityDay,
@@ -193,3 +194,4 @@ ON A.Id = S.Id
     AND A.ActivityDate = S.ActivityDay
 GROUP BY S.ActivityDay,A.Id, A.Calories
 ORDER BY S.ActivityDay
+-- saved results as CSV - "bella beats calories vs active minutes" see "bella beats calories vs active minutes viz"
