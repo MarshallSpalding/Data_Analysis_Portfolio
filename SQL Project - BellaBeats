@@ -1,3 +1,7 @@
+--Introduction: In this project- I am asked to gain insights from a dataset for a fictional company "BellaBeats". 
+--They are a wearable fitness tracker company that specifically makes products for women. 
+--The original data can be found here: https://www.kaggle.com/arashnic/fitbit. I chose to limit my analysis to 4 tables to more effectively showcase my technical skills. 
+
 --Start with basic table views
 SELECT *
 FROM `case-study-2-332919.Case_Study_2.dailyActivity_merged` 
@@ -195,3 +199,8 @@ ON A.Id = S.Id
 GROUP BY S.ActivityDay,A.Id, A.Calories
 ORDER BY S.ActivityDay
 -- saved results as CSV - "bella beats calories vs active minutes" see "bella beats calories vs active minutes viz"
+
+
+--Recommendations based on analysis: 
+--1. We see the obvious positive correlations between calories burned and total active minutes. Therefore we can conclude that wearing a BellaBeats fitness tracker will help customers keep track of daily activity and get a better understanding of how many calories they are burning.
+--2. We see a wide variety in activity types during the duration of the study. We can conclude that the BellaBeats fitness tracker would be helpful for people doing any kind of workout (ex. not just people who are participating a certain type of workout or activity level). Additionally we can then include a variety of workout suggestions within the app to help keep our users engaged and trying new workouts. 
